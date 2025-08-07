@@ -26,11 +26,17 @@ if uploaded_file:
         # Calculate pallets required and total pallet weight
         df["Pallets Required"] = (df["Case Qty Ordered"] / df["Cases per Pallet"]).apply(lambda x: math.ceil(x) if pd.notnull(x) else 0)
         df["Total Pallet Weight"] = df["Pallets Required"] * df["Pallet Weight (lbs)"]
+        df["Total Pallet Weight"] = pd.to_numeric(df["Total Pallet Weight"], errors="coerce")
 
-        # Total pallet counts by type
-        fuel_df = df[df["Is Fuel (Double Stackable)"] == "Yes"]
-        nonfuel_df = df[df["Is Fuel (Double Stackable)"] != "Yes"]
+        # Split fuel and non-fuel
+        fuel_df = df[df["Is Fuel (Double Stackable)"] == "Yes"].copy()
+        nonfuel_df = df[df["Is Fuel (Double Stackable)"] != "Yes"].copy()
 
+        # Convert weights to numeric to avoid TypeError
+        fuel_df["Total Pallet Weight"] = pd.to_numeric(fuel_df["Total Pallet Weight"], errors="coerce")
+        nonfuel_df["Total Pallet Weight"] = pd.to_numeric(nonfuel_df["Total Pallet Weight"], errors="coerce")
+
+        # Aggregate values
         fuel_pallets = fuel_df["Pallets Required"].sum()
         nonfuel_pallets = nonfuel_df["Pallets Required"].sum()
         total_weight = df["Total Pallet Weight"].sum()
